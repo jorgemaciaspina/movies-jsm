@@ -1,11 +1,10 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { use, useState } from 'react'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+import Search from './components/Search'
 
+function App() {
+  const [searchTerm, setSearchTerm] = useState("");
   return (
     <main>
       <div className="pattern" />
@@ -16,7 +15,7 @@ function App() {
           <h1> Encuentra tu <span className="text-gradient">película</span> favorita sin complicaciones</h1>
         </header>
 
-        <p>Buscar</p>
+        <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
       </div>
     </main>
   )
