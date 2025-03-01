@@ -22,11 +22,11 @@ function App() {
   const [movieList, setMovieList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const fetchMovies = async () => {
+  const fetchMovies = async (query = '') => {
     setIsLoading(true);
     setErrorMessage('');
     try{
-      const endpoint = `${TMDB_API_URL}/discover/movie?sort_by=propularity.desc`
+      const endpoint = query ? `${TMDB_API_URL}/search/movie?query=${encodeURIComponent(query)}` : `${TMDB_API_URL}/discover/movie?sort_by=propularity.desc`
       const response = await fetch(endpoint, TMDB_API_OPTIONS);
       if(!response.ok){
         throw new Error('Ocurrio un error obteniendo las peliculas')
@@ -47,8 +47,8 @@ function App() {
   }
 
   useEffect(() => {
-    fetchMovies();
-  }, [])
+    fetchMovies(searchTerm);
+  }, [searchTerm])
 
   return (
     <main>
