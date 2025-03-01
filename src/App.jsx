@@ -6,6 +6,7 @@ import Search from './components/Search'
 // TMDB API
 const TMDB_API_URL = import.meta.env.VITE_TMDB_API_URL;
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const MOVIE_POSTER_BASE_URL = import.meta.env.VITE_MOVIE_POSTER_BASE_URL;
 const TMDB_API_OPTIONS = {
   method: "GET",
   headers: {
@@ -17,15 +18,30 @@ const TMDB_API_OPTIONS = {
 function App() {
   const [searchTerm, setSearchTerm] = useState("");
   const [errorMessage, setErrorMessage] = useState('');
+  const [movieList, setMovieList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const fetchMovies = async () => {
+    setIsLoading(true);
+    setErrorMessage('');
     try{
       const endpoint = `${TMDB_API_URL}/discover/movie?sort_by=propularity.desc`
       const response = await fetch(endpoint, TMDB_API_OPTIONS);
-      console.log(response);
+      if(!response.ok){
+        throw new Error('Ocurrio un error obteniendo las peliculas')
+      }
+      const data = await response.json();
+      if(data.Response === 'False'){
+        setErrorMessage(data.Error || 'Ocurrio un error obteniendo las peliculas');
+        setMovieList([]);
+        return;
+      }
+
+      setMovieList(data.results || []);
     }catch(error){
-      console.error(`Error fetching movies: ${error}`)
       setErrorMessage('Hay un problema obteniendo las películas, favor intentalo más tarde.')
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -46,7 +62,20 @@ function App() {
         <section className='all-movies'>
           <h2>Todas las peliculas</h2>
 
-          { errorMessage && <p className='error-message'>{errorMessage}</p>}
+          {isLoading && (
+            <span className="text-white">Cargando</span>
+          )}
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+          {movieList.length > 0 && (
+            <ul>
+              {movieList.map((movie) => (
+                <li key={`movie-${movie.id}`}>
+                  <img src={`${MOVIE_POSTER_BASE_URL}${movie.poster_path}`} alt={movie.title} />
+                  <p>{movie.title}</p>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       </div>
     </main>
