@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import './App.css'
 
 import Search from './components/Search'
+import Spiner from './components/Spiner';
 
 // TMDB API
 const TMDB_API_URL = import.meta.env.VITE_TMDB_API_URL;
@@ -63,7 +64,7 @@ function App() {
           <h2>Todas las peliculas</h2>
 
           {isLoading && (
-            <span className="text-white">Cargando</span>
+            <Spiner />
           )}
           {errorMessage && <p className="text-red-500">{errorMessage}</p>}
           {movieList.length > 0 && (
