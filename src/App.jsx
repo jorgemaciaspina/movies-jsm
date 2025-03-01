@@ -3,11 +3,11 @@ import './App.css'
 
 import Search from './components/Search'
 import Spiner from './components/Spiner';
+import MovieCard from './components/MovieCard';
 
 // TMDB API
 const TMDB_API_URL = import.meta.env.VITE_TMDB_API_URL;
 const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
-const MOVIE_POSTER_BASE_URL = import.meta.env.VITE_MOVIE_POSTER_BASE_URL;
 const TMDB_API_OPTIONS = {
   method: "GET",
   headers: {
@@ -61,7 +61,7 @@ function App() {
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
         <section className='all-movies'>
-          <h2>Todas las peliculas</h2>
+          <h2 className="mt-[40px]">Todas las peliculas</h2>
 
           {isLoading && (
             <Spiner />
@@ -70,10 +70,7 @@ function App() {
           {movieList.length > 0 && (
             <ul>
               {movieList.map((movie) => (
-                <li key={`movie-${movie.id}`}>
-                  <img src={`${MOVIE_POSTER_BASE_URL}${movie.poster_path}`} alt={movie.title} />
-                  <p>{movie.title}</p>
-                </li>
+                <MovieCard key={`movie-card-${movie.id}`} movie={movie} />
               ))}
             </ul>
           )}
