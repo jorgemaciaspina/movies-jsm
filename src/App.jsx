@@ -5,6 +5,7 @@ import './App.css'
 import Search from './components/Search'
 import Spiner from './components/Spiner';
 import MovieCard from './components/MovieCard';
+import { updateSearchCount } from './appwrite';
 
 // TMDB API
 const TMDB_API_URL = import.meta.env.VITE_TMDB_API_URL;
@@ -43,6 +44,9 @@ function App() {
       }
 
       setMovieList(data.results || []);
+      if(query && data.results.length > 0){
+        await updateSearchCount(query, data.results[0]);
+      }
     }catch(error){
       setErrorMessage('Hay un problema obteniendo las películas, favor intentalo más tarde.')
     } finally {
