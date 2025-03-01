@@ -1,34 +1,118 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { useEffect, useState } from 'react'
+import { useDebounce } from 'react-use'; 
 import './App.css'
 
+import Search from './components/Search'
+import Spiner from './components/Spiner';
+import MovieCard from './components/MovieCard';
+import { updateSearchCount, getTrendingMovies } from './appwrite';
+
+// TMDB API
+const TMDB_API_URL = import.meta.env.VITE_TMDB_API_URL;
+const TMDB_API_KEY = import.meta.env.VITE_TMDB_API_KEY;
+const TMDB_API_OPTIONS = {
+  method: "GET",
+  headers: {
+    accept: 'application/json',
+    Authorization: `Bearer ${TMDB_API_KEY}`
+  }
+};
+
 function App() {
-  const [count, setCount] = useState(0)
+  const [searchTerm, setSearchTerm] = useState("");
+  const [errorMessage, setErrorMessage] = useState('');
+  const [movieList, setMovieList] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState();
+  const [trendingMovies, setTrendingMovies] = useState([]);
+
+  // debounce, prevents unnecessary API calls, only makes a call after 500ms
+  useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm]);
+  const fetchMovies = async (query = '') => {
+    setIsLoading(true);
+    setErrorMessage('');
+    try{
+      const endpoint = query ? `${TMDB_API_URL}/search/movie?query=${encodeURIComponent(query)}` : `${TMDB_API_URL}/discover/movie?sort_by=propularity.desc`
+      const response = await fetch(endpoint, TMDB_API_OPTIONS);
+      if(!response.ok){
+        throw new Error('Ocurrio un error obteniendo las peliculas')
+      }
+      const data = await response.json();
+      if(data.Response === 'False'){
+        setErrorMessage(data.Error || 'Ocurrio un error obteniendo las peliculas');
+        setMovieList([]);
+        return;
+      }
+
+      setMovieList(data.results || []);
+      if(query && data.results.length > 0){
+        await updateSearchCount(query, data.results[0]);
+      }
+    }catch(error){
+      setErrorMessage('Hay un problema obteniendo las películas, favor intentalo más tarde.')
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const fetchTrendingMovies = async () => {
+    try {
+      const response = await getTrendingMovies();
+      setTrendingMovies(response);
+    } catch (error) {
+      console.error("Error fetching trending movies:", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchTrendingMovies();
+  }, [])
+
+  useEffect(() => {
+    fetchMovies(debouncedSearchTerm);
+  }, [debouncedSearchTerm])
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+    <main>
+      <div className="pattern" />
+
+      <div className="wrapper">
+        <header>
+          <img src="./hero.png" alt="Hero Banner" />
+          <h1> Encuentra tu <span className="text-gradient">película</span> favorita sin complicaciones</h1>
+          <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+        </header>
+        {trendingMovies.length > 0 && (
+          <section className='trending'>
+            <h2>Populares</h2>
+
+            <ul>
+              {trendingMovies.map((movie, index) => (
+                <li key={`trending-movie-${movie.$id}`}>
+                  <p>{index + 1}</p>
+                  <img src={`${movie.poster_url}`} alt={movie.title} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
+        <section className='all-movies'>
+          <h2>Todas las peliculas</h2>
+
+          {isLoading && (
+            <Spiner />
+          )}
+          {errorMessage && <p className="text-red-500">{errorMessage}</p>}
+          {movieList.length > 0 && (
+            <ul>
+              {movieList.map((movie) => (
+                <MovieCard key={`movie-card-${movie.id}`} movie={movie} />
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    </main>
   )
 }
 
