@@ -5,7 +5,7 @@ import './App.css'
 import Search from './components/Search'
 import Spiner from './components/Spiner';
 import MovieCard from './components/MovieCard';
-import { updateSearchCount } from './appwrite';
+import { updateSearchCount, getTrendingMovies } from './appwrite';
 
 // TMDB API
 const TMDB_API_URL = import.meta.env.VITE_TMDB_API_URL;
@@ -24,6 +24,7 @@ function App() {
   const [movieList, setMovieList] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState();
+  const [trendingMovies, setTrendingMovies] = useState([]);
 
   // debounce, prevents unnecessary API calls, only makes a call after 500ms
   useDebounce(() => setDebouncedSearchTerm(searchTerm), 500, [searchTerm]);
@@ -54,6 +55,19 @@ function App() {
     }
   }
 
+  const fetchTrendingMovies = async () => {
+    try {
+      const response = await getTrendingMovies();
+      setTrendingMovies(response);
+    } catch (error) {
+      console.error("Error fetching trending movies:", error);
+    }
+  }
+
+  useEffect(() => {
+    fetchTrendingMovies();
+  }, [])
+
   useEffect(() => {
     fetchMovies(debouncedSearchTerm);
   }, [debouncedSearchTerm])
@@ -68,8 +82,22 @@ function App() {
           <h1> Encuentra tu <span className="text-gradient">película</span> favorita sin complicaciones</h1>
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
         </header>
+        {trendingMovies.length > 0 && (
+          <section className='trending'>
+            <h2>Populares</h2>
+
+            <ul>
+              {trendingMovies.map((movie, index) => (
+                <li key={`trending-movie-${movie.$id}`}>
+                  <p>{index + 1}</p>
+                  <img src={`${movie.poster_url}`} alt={movie.title} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         <section className='all-movies'>
-          <h2 className="mt-[40px]">Todas las peliculas</h2>
+          <h2>Todas las peliculas</h2>
 
           {isLoading && (
             <Spiner />
