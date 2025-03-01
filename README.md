@@ -23,3 +23,10 @@ If you are developing a production application, we recommend using TypeScript an
 
 The tutorial is very good IMO, it covers all the basics and gives you a nice looking result.
  
+ # How to run?
+ 1. install node `22.14.0`
+ 2. install packages with `npm install`
+ 3. Rename the file `.env.example` to `.env.local`
+ 4. Update the values on the `.env.local` file
+ 5. Run with `npm run dev`
+ 6. Visit on your [localhost](http://localhost:5173)
